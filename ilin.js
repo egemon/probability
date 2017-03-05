@@ -1,24 +1,17 @@
 const strategiesArr = [];
 const DIMENSION = 2;
+// const VALUES = [0 , 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // array no less values then DIMENSION
 const PROBABILITY_PRECISION = 0.1;
 const PLAYER_AMOUNT = 3;
+const PRESENT_PRICE = 10;
 
-function getStrategyExpenses (strategy) {
-  return  strategy.reduce((prev, cur, i) => {
-    // here i means 0,1,2...N $
-    return prev + cur*i;
-  }, 0);
+function createValues(VALUE_STEP, DIMENSION) {
+  const VALUES = [];
+  for (var i = 0; i < DIMENSION; i+=VALUE_STEP) {
+    VALUES.push();
+  }
+  return
 }
-
-function getPureStrategies(dimension) {
-  return (new Array(dimension)).fill(0).map((val, index) => {
-    const arr = new Array(dimension).fill(0);
-    arr[index] = 1;
-
-    return arr;
-  })
-}
-const pureStrategies = getPureStrategies(DIMENSION);
 
 
 function fillStartArray(vectorLength, propStep, strategiesArr, topProp, currentStrategy) {
@@ -34,51 +27,91 @@ function fillStartArray(vectorLength, propStep, strategiesArr, topProp, currentS
     currentStrategy.length = currentStrategy.length - 1;
   }
 }
-fillStartArray(DIMENSION, PROBABILITY_PRECISION, strategiesArr, 1, []);
-// console.log(strategiesArr);
-
-function getExpectedProfitForPlayer(playerNumber, strategies) {
-  const playerExpenses = getStrategyExpenses(strategies.slice(playerNumber, playerNumber+1)[0]);
-  const otherExpenses = strategies.reduce((prev, cur, i) => {
-    if (i === playerNumber) return prev;
-    return prev + getStrategyExpenses(cur);
-  }, 0);
-  return (otherExpenses + 0.1 * PLAYER_AMOUNT)/ (playerExpenses+0.1);
-}
 
 
-
-function isGoodStrategyFor(playerNumber, mixedStrategy, playerAmount, strategies, expectedProfits) {
-  if (strategies.length <= playerAmount) {
-    if (playerNumber === strategies.length) {
-      strategies.push(mixedStrategy);
-      isGoodStrategyFor(playerNumber, mixedStrategy, playerAmount-1, strategies, expectedProfits);
-      strategies.length--;
-    } else {
-      pureStrategies.forEach((pureStrategy) => {
-        strategies.push(pureStrategy);
-        isGoodStrategyFor(playerNumber, mixedStrategy, playerAmount-1, strategies, expectedProfits);
-        strategies.length--;
+function findOptimalStrategiesSet(strategiesArr) {
+  let optimalStrategies = [];
+  strategiesArr.forEach((mixedStrategy1) => {
+    strategiesArr.forEach((mixedStrategy2) => {
+      strategiesArr.forEach((mixedStrategy3) => {
+        const strategySet = [mixedStrategy1, mixedStrategy2, mixedStrategy3];
+        if (isSetOptimal(strategySet)) {
+          optimalStrategies.push(strategySet);
+        }
       });
-    }
-  } else {
-    strategiesList.push(strategies);
-    expectedProfits.push(getExpectedProfitForPlayer(playerNumber, strategies));
-  }
-}
-const profits = [];
-const strategiesList = [];
-function getListOfGoodStrategies(palyerAmount, strategiesArr) {
-  (new Array(palyerAmount)).fill(0).map((val, i) => i).forEach((playerNumber) => {
-    //dont know what to do if good??
-    strategiesArr.forEach((mixedStrategy) => {
-      let expectedProfits = [];
-      isGoodStrategyFor(playerNumber, mixedStrategy, palyerAmount, [], expectedProfits);
-      profits.push(expectedProfits);
     });
   });
+  return optimalStrategies;
 }
 
-getListOfGoodStrategies(PLAYER_AMOUNT, strategiesArr);
-console.log('profits', profits);
-console.log('strategiesList', strategiesList);
+function isSetOptimal(strategySet) {
+  return isStrategyOptimalForPlayer(0, strategySet) &&
+   isStrategyOptimalForPlayer(1, strategySet) &&
+   isStrategyOptimalForPlayer(2, strategySet);
+}
+
+function isStrategyOptimalForPlayer(playerNumber, strategySet) {
+  const playerStrategy = strategySet[playerNumber];
+  const indexOfPositiveProbability = playerStrategy.findIndex(probability => probability > 0);
+  const pureStrategy = getPureStrategy(indexOfPositiveProbability);
+  const testSet = strategySet.map((strategy, i) => i === playerNumber ? pureStrategy : strategy);
+  const strategyExpectedPayof = getExpectedPlayerPayof(playerNumber, testSet);
+  playerStrategy.forEach((probability, index) => {
+    const currentPureStrategy = getPureStrategy(index);
+    const currentTestSet = strategySet.map((strategy, i) => i === playerNumber ? currentPureStrategy : strategy);
+    const pureStrategyExpectedPayof = getExpectedPlayerPayof(playerNumber, currentTestSet);
+    if ((probability && !isEqual(pureStrategyExpectedPayof, strategyExpectedPayof)) ||
+        !probability && moreThan(pureStrategyExpectedPayof, strategyExpectedPayof)) {
+        return false;
+    }
+  });
+  return true;
+}
+
+function getPureStrategy(index) {
+  const arr = (new Array(DIMENSION)).fill(0);
+  arr[index] = 1;
+  return arr;
+}
+
+function isEqual(a, b) {
+  return a === b;
+}
+
+function moreThan(a, b) {
+  return a > b;
+}
+
+function getExpectedPlayerPayof(playerNumber, testSet) {
+  let expectedPlayerPayof = 0;
+  testSet[0].forEach((probability0, index0) => {
+    testSet[1].forEach((probability1, index1) => {
+      testSet[2].forEach((probability2, index2) => {
+        const caseProbability = probability0 * probability1 * probability2;
+        if (caseProbability) { //in case it is unreal - skip case
+          const casePlayerPayoff = getPayofsForAll([VALUES[index0], VALUES[index1], VALUES[index2]])[playerNumber];
+          expectedPlayerPayof += casePlayerPayoff * caseProbability;
+        }
+      });
+    });
+  });
+  return expectedPlayerPayof;
+}
+
+function getPayofsForAll(values) {
+  const max = Math.max(...values);
+  const winner = values.indexOf(max);
+  // here should be logic in case of equal payments
+  switch(winner) {
+    case 0:
+      return [PRESENT_PRICE - values[0],2 ,-5];
+    case 1:
+      return [-5, PRESENT_PRICE - values[1], 3];
+    case 2:
+      return [1, -5, PRESENT_PRICE - values[2]];
+  }
+}
+fillStartArray(DIMENSION, PROBABILITY_PRECISION, strategiesArr, 1, []);
+console.log(strategiesArr);
+const optimal = findOptimalStrategiesSet(strategiesArr);
+console.log(optimal);
