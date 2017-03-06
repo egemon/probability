@@ -31,6 +31,7 @@ function fillStartArray(vectorLength, propStep, strategiesArr, topProp, currentS
 
 function findOptimalStrategiesSet(strategiesArr) {
   let optimalStrategies = [];
+  // remove all equal strategies for unoptimal
   strategiesArr.forEach((mixedStrategy1) => {
     strategiesArr.forEach((mixedStrategy2) => {
       strategiesArr.forEach((mixedStrategy3) => {
