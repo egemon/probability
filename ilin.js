@@ -1,10 +1,10 @@
 const strategiesArr = [];
-const DIMENSION = 2;
-// const VALUES = [0 , 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // array no less values then DIMENSION
+const DIMENSION = 3;
+const VALUES = ['stone', 'paper', 'scirsus']; // array no less values then DIMENSION
 const PROBABILITY_PRECISION = 0.1;
 const PLAYER_AMOUNT = 3;
 const PRESENT_PRICE = 10;
-
+const EPSILON = 0.1;
 function createValues(VALUE_STEP, DIMENSION) {
   const VALUES = [];
   for (var i = 0; i < DIMENSION; i+=VALUE_STEP) {
@@ -56,15 +56,18 @@ function isStrategyOptimalForPlayer(playerNumber, strategySet) {
   const pureStrategy = getPureStrategy(indexOfPositiveProbability);
   const testSet = strategySet.map((strategy, i) => i === playerNumber ? pureStrategy : strategy);
   const strategyExpectedPayof = getExpectedPlayerPayof(playerNumber, testSet);
-  playerStrategy.forEach((probability, index) => {
-    const currentPureStrategy = getPureStrategy(index);
-    const currentTestSet = strategySet.map((strategy, i) => i === playerNumber ? currentPureStrategy : strategy);
-    const pureStrategyExpectedPayof = getExpectedPlayerPayof(playerNumber, currentTestSet);
-    if ((probability && !isEqual(pureStrategyExpectedPayof, strategyExpectedPayof)) ||
-        !probability && moreThan(pureStrategyExpectedPayof, strategyExpectedPayof)) {
-        return false;
+
+    for (var index = 0; index < playerStrategy.length; index++) {
+      let probability = playerStrategy[index];
+      const currentPureStrategy = getPureStrategy(index);
+      const currentTestSet = strategySet.map((strategy, i) => i === playerNumber ? currentPureStrategy : strategy);
+      const pureStrategyExpectedPayof = getExpectedPlayerPayof(playerNumber, currentTestSet);
+      if ((probability && !isEqual(pureStrategyExpectedPayof, strategyExpectedPayof)) ||
+          !probability && moreThan(pureStrategyExpectedPayof, strategyExpectedPayof)) {
+          return false;
+      }
     }
-  });
+
   return true;
 }
 
@@ -75,11 +78,11 @@ function getPureStrategy(index) {
 }
 
 function isEqual(a, b) {
-  return a === b;
+  return Math.abs(a - b) < EPSILON;
 }
 
 function moreThan(a, b) {
-  return a > b;
+  return a - b > EPSILON;
 }
 
 function getExpectedPlayerPayof(playerNumber, testSet) {
@@ -89,7 +92,7 @@ function getExpectedPlayerPayof(playerNumber, testSet) {
       testSet[2].forEach((probability2, index2) => {
         const caseProbability = probability0 * probability1 * probability2;
         if (caseProbability) { //in case it is unreal - skip case
-          const casePlayerPayoff = getPayofsForAll([VALUES[index0], VALUES[index1], VALUES[index2]])[playerNumber];
+          const casePlayerPayoff = getPayofsForAll([index0, index1, index2])[playerNumber];
           expectedPlayerPayof += casePlayerPayoff * caseProbability;
         }
       });
@@ -98,20 +101,34 @@ function getExpectedPlayerPayof(playerNumber, testSet) {
   return expectedPlayerPayof;
 }
 
-function getPayofsForAll(values) {
-  const max = Math.max(...values);
-  const winner = values.indexOf(max);
-  // here should be logic in case of equal payments
-  switch(winner) {
-    case 0:
-      return [PRESENT_PRICE - values[0],2 ,-5];
-    case 1:
-      return [-5, PRESENT_PRICE - values[1], 3];
-    case 2:
-      return [1, -5, PRESENT_PRICE - values[2]];
+// function getPayofsForAll(indexes) {
+//   const values = [VALUES[indexes[0]], VALUES[indexes[1]], VALUES[indexes[2]]];
+//   const max = Math.max(...values);
+//   const winner = values.indexOf(max);
+//   // here should be logic in case of equal payments
+//   switch(winner) {
+//     case 0:
+//       return [PRESENT_PRICE - values[0],2 ,-5];
+//     case 1:
+//       return [-5, PRESENT_PRICE - values[1], 3];
+//     case 2:
+//       return [1, -5, PRESENT_PRICE - values[2]];
+//   }
+// }
+// const VALUES = ['stone', 'paper', 'scirsus']; // array no less values then DIMENSION
+
+function getPayofsForAll(indexes) {
+  const values = [VALUES[indexes[0]], VALUES[indexes[1]], VALUES[indexes[2]]];
+  const thatCase = values[0] + '_' + values[1];
+  if (thatCase === 'stone_paper' || thatCase === 'paper_scirsus' || thatCase === 'scirsus_stone' ) {
+    return [-1, 1, 0];
+  } else {
+    return [1, -1, 0];
   }
 }
+
+
 fillStartArray(DIMENSION, PROBABILITY_PRECISION, strategiesArr, 1, []);
 console.log(strategiesArr);
-const optimal = findOptimalStrategiesSet(strategiesArr);
-console.log(optimal);
+// const optimal = findOptimalStrategiesSet(strategiesArr);
+// console.log(optimal);
