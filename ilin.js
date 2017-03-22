@@ -2,13 +2,14 @@ const strategiesArr = [];
 const DIMENSION = 3;
 const expectedPayoffsCache = {};
 const VALUES = ['stone', 'paper', 'scirsus']; // array no less values then DIMENSION
-const PROBABILITY_PRECISION = 0.05;
+const PROBABILITY_PRECISION = 0.1;
 const PLAYER_AMOUNT = 3;
 const PRESENT_PRICE = 10;
 const EPSILON = 0.1;
+const times = [];
 function createValues(VALUE_STEP, DIMENSION) {
   const VALUES = [];
-  for (var i = 0; i < DIMENSION; i+=VALUE_STEP) {
+  for (let i = 0; i < DIMENSION; i+=VALUE_STEP) {
     VALUES.push();
   }
   return
@@ -44,7 +45,9 @@ function findOptimalStrategiesSet(strategiesArr) {
       });
     });
   });
-  console.log('Time of execution: ', (Date.now() - now) / 1000, ' sec.');
+  const executionTime = (Date.now() - now) / 1000;
+  console.log('Time of execution: ', executionTime, ' sec.');
+  times.push(executionTime);
   return optimalStrategies;
 }
 
@@ -57,15 +60,11 @@ function isSetOptimal(strategySet) {
 function isStrategyOptimalForPlayer(playerNumber, strategySet) {
   const playerStrategy = strategySet[playerNumber];
   const indexOfPositiveProbability = playerStrategy.findIndex(probability => probability > 0);
-  const pureStrategy = getPureStrategy(indexOfPositiveProbability);
-  const testSet = strategySet.map((strategy, i) => i === playerNumber ? pureStrategy : strategy);
-  const strategyExpectedPayof = getExpectedPlayerPayof(playerNumber, testSet);
+  const strategyExpectedPayof = getStrategyExpectedPayof(playerNumber, indexOfPositiveProbability, strategySet);
 
-    for (var index = 0; index < playerStrategy.length; index++) {
+    for (let index = 0; index < playerStrategy.length; index++) {
       let probability = playerStrategy[index];
-      const currentPureStrategy = getPureStrategy(index);
-      const currentTestSet = strategySet.map((strategy, i) => i === playerNumber ? currentPureStrategy : strategy);
-      const pureStrategyExpectedPayof = getExpectedPlayerPayof(playerNumber, currentTestSet);
+      const pureStrategyExpectedPayof = getStrategyExpectedPayof(playerNumber, index, strategySet);
       if ((probability && !isEqual(pureStrategyExpectedPayof, strategyExpectedPayof)) ||
           !probability && moreThan(pureStrategyExpectedPayof, strategyExpectedPayof)) {
           return false;
@@ -73,6 +72,12 @@ function isStrategyOptimalForPlayer(playerNumber, strategySet) {
     }
 
   return true;
+}
+
+function getStrategyExpectedPayof(playerNumber, indexOfPure, strategySet) {
+  const pureStrategy = getPureStrategy(indexOfPure);
+  const testSet = strategySet.map((strategy, i) => i === playerNumber ? pureStrategy : strategy);
+  return getExpectedPlayerPayof(playerNumber, testSet);
 }
 
 function getPureStrategy(index) {
@@ -145,3 +150,12 @@ fillStartArray(DIMENSION, PROBABILITY_PRECISION, strategiesArr, 1, []);
 console.log(strategiesArr);
 // const optimal = findOptimalStrategiesSet(strategiesArr);
 // console.log(optimal);
+
+
+function test(number) {
+  for (let i = 0; i < number; i++) {
+    const result = findOptimalStrategiesSet(strategiesArr);
+    console.log('result', result);
+  }
+  return _.sum(times)/times.length;
+}
