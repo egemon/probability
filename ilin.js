@@ -1,13 +1,13 @@
 const strategiesArr = [];
 const DIMENSION = 3;
-const VALUES = ['stone', 'paper', 'scirsus']; // array no less values then DIMENSION
+const VALUES = ['stone', 'paper', '``scirsus``']; // array no less values then DIMENSION
 const PROBABILITY_PRECISION = 0.1;
 const PLAYER_AMOUNT = 3;
 const PRESENT_PRICE = 10;
 const EPSILON = 0.1;
 function createValues(VALUE_STEP, DIMENSION) {
   const VALUES = [];
-  for (var i = 0; i < DIMENSION; i+=VALUE_STEP) {
+  for (let i = 0; i < DIMENSION; i+=VALUE_STEP) {
     VALUES.push();
   }
   return
@@ -32,17 +32,29 @@ function fillStartArray(vectorLength, propStep, strategiesArr, topProp, currentS
 function findOptimalStrategiesSet(strategiesArr) {
   let optimalStrategies = [];
   // remove all equal strategies for unoptimal
-  strategiesArr.forEach((mixedStrategy1) => {
-    strategiesArr.forEach((mixedStrategy2) => {
-      strategiesArr.forEach((mixedStrategy3) => {
+    // find all pure maximum strategies
+    for (let j = 0; j++; j < strategiesArr.length) {
+      for (let k = 0; k++; k < strategiesArr.length) {
+        // let mixedStrategy1 = strategiesArr[i];
+        let mixedStrategy2 = strategiesArr[j];
+        let mixedStrategy3 = strategiesArr[k];
+        const goodPureStrategies = getGoodPureStrategiesForPlayer(0, [null, mixedStrategy2, mixedStrategy3]);
+        const mixedStrategies
+
         const strategySet = [mixedStrategy1, mixedStrategy2, mixedStrategy3];
-        if (isSetOptimal(strategySet)) {
+        if (isStrategyOptimalForPlayer(0, strategySet) &&
+          isStrategyOptimalForPlayer(1, strategySet) &&
+          isStrategyOptimalForPlayer(2, strategySet)) {
           optimalStrategies.push(strategySet);
         }
-      });
-    });
-  });
+      }
+    }
+
   return optimalStrategies;
+}
+
+function getGoodPureStrategiesForPlayer(playerNumber, strategySet) {
+
 }
 
 function isSetOptimal(strategySet) {
@@ -54,15 +66,11 @@ function isSetOptimal(strategySet) {
 function isStrategyOptimalForPlayer(playerNumber, strategySet) {
   const playerStrategy = strategySet[playerNumber];
   const indexOfPositiveProbability = playerStrategy.findIndex(probability => probability > 0);
-  const pureStrategy = getPureStrategy(indexOfPositiveProbability);
-  const testSet = strategySet.map((strategy, i) => i === playerNumber ? pureStrategy : strategy);
-  const strategyExpectedPayof = getExpectedPlayerPayof(playerNumber, testSet);
+  const strategyExpectedPayof = getPayoffOfPureStrategy(playerNumber, indexOfPositiveProbability, strategySet);
 
-    for (var index = 0; index < playerStrategy.length; index++) {
+    for (let index = 0; index < playerStrategy.length; index++) {
       let probability = playerStrategy[index];
-      const currentPureStrategy = getPureStrategy(index);
-      const currentTestSet = strategySet.map((strategy, i) => i === playerNumber ? currentPureStrategy : strategy);
-      const pureStrategyExpectedPayof = getExpectedPlayerPayof(playerNumber, currentTestSet);
+      const pureStrategyExpectedPayof = getPayoffOfPureStrategy(playerNumber, index, strategySet);
       if ((probability && !isEqual(pureStrategyExpectedPayof, strategyExpectedPayof)) ||
           !probability && moreThan(pureStrategyExpectedPayof, strategyExpectedPayof)) {
           return false;
@@ -71,6 +79,13 @@ function isStrategyOptimalForPlayer(playerNumber, strategySet) {
 
   return true;
 }
+
+function getPayoffOfPureStrategy(playerNumber, indexOfPure, strategySet) {
+  const currentPureStrategy = getPureStrategy(indexOfPure);
+  const currentTestSet = strategySet.map((strategy, i) => i === playerNumber ? currentPureStrategy : strategy);
+  return getExpectedPlayerPayof(playerNumber, currentTestSet);
+}
+
 
 function getPureStrategy(index) {
   const arr = (new Array(DIMENSION)).fill(0);
@@ -116,13 +131,15 @@ function getExpectedPlayerPayof(playerNumber, testSet) {
 //       return [1, -5, PRESENT_PRICE - values[2]];
 //   }
 // }
-// const VALUES = ['stone', 'paper', 'scirsus']; // array no less values then DIMENSION
+// const VALUES = ['stone', 'paper', '``scirsus``']; // array no less values then DIMENSION
 
 function getPayofsForAll(indexes) {
   const values = [VALUES[indexes[0]], VALUES[indexes[1]], VALUES[indexes[2]]];
   const thatCase = values[0] + '_' + values[1];
-  if (thatCase === 'stone_paper' || thatCase === 'paper_scirsus' || thatCase === 'scirsus_stone' ) {
+  if (thatCase === 'stone_paper' || thatCase === 'paper_``scirsus``' || thatCase === '``scirsus``_stone') {
     return [-1, 1, 0];
+  } else if (thatCase === 'stone_stone'  || thatCase === 'paper_paper' || thatCase === '``scirsus``_``scirsus``') {
+    return [0, 0, 0];
   } else {
     return [1, -1, 0];
   }
