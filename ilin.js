@@ -1,7 +1,8 @@
 const strategiesArr = [];
 const DIMENSION = 3;
+const expectedPayoffsCache = {};
 const VALUES = ['stone', 'paper', 'scirsus']; // array no less values then DIMENSION
-const PROBABILITY_PRECISION = 0.1;
+const PROBABILITY_PRECISION = 0.05;
 const PLAYER_AMOUNT = 3;
 const PRESENT_PRICE = 10;
 const EPSILON = 0.1;
@@ -89,19 +90,26 @@ function moreThan(a, b) {
 }
 
 function getExpectedPlayerPayof(playerNumber, testSet) {
-  let expectedPlayerPayof = 0;
+  const cacheKey = JSON.stringify(testSet);
+  if (expectedPayoffsCache[cacheKey]) {
+    return expectedPayoffsCache[cacheKey][playerNumber];
+  }
+  let expectedPlayersPayofs = [0, 0, 0];
   testSet[0].forEach((probability0, index0) => {
     testSet[1].forEach((probability1, index1) => {
       testSet[2].forEach((probability2, index2) => {
         const caseProbability = probability0 * probability1 * probability2;
         if (caseProbability) { //in case it is unreal - skip case
-          const casePlayerPayoff = getPayofsForAll([index0, index1, index2])[playerNumber];
-          expectedPlayerPayof += casePlayerPayoff * caseProbability;
+          const allPlayersPayoff = getPayofsForAll([index0, index1, index2]);
+          expectedPlayersPayofs[0] += allPlayersPayoff[0] * caseProbability;
+          expectedPlayersPayofs[1] += allPlayersPayoff[1] * caseProbability;
+          expectedPlayersPayofs[2] += allPlayersPayoff[2] * caseProbability;
         }
       });
     });
   });
-  return expectedPlayerPayof;
+  expectedPayoffsCache[cacheKey] = expectedPlayersPayofs;
+  return expectedPlayersPayofs[playerNumber];
 }
 
 // function getPayofsForAll(indexes) {
