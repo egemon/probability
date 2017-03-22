@@ -13,7 +13,6 @@ function createValues(VALUE_STEP, DIMENSION) {
   return
 }
 
-
 function fillStartArray(vectorLength, propStep, strategiesArr, topProp, currentStrategy) {
   if(currentStrategy.length < vectorLength - 1) {
     for(let q = 0; q<=topProp ; q += propStep) {
@@ -30,6 +29,8 @@ function fillStartArray(vectorLength, propStep, strategiesArr, topProp, currentS
 
 
 function findOptimalStrategiesSet(strategiesArr) {
+  const now = Date.now();
+
   let optimalStrategies = [];
   // remove all equal strategies for unoptimal
   strategiesArr.forEach((mixedStrategy1) => {
@@ -42,6 +43,7 @@ function findOptimalStrategiesSet(strategiesArr) {
       });
     });
   });
+  console.log('Time of execution: ', (Date.now() - now) / 1000, ' sec.');
   return optimalStrategies;
 }
 
