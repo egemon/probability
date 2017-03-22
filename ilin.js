@@ -131,8 +131,10 @@ function getExpectedPlayerPayof(playerNumber, testSet) {
 function getPayofsForAll(indexes) {
   const values = [VALUES[indexes[0]], VALUES[indexes[1]], VALUES[indexes[2]]];
   const thatCase = values[0] + '_' + values[1];
-  if (thatCase === 'stone_paper' || thatCase === 'paper_scirsus' || thatCase === 'scirsus_stone' ) {
+  if (thatCase === 'stone_paper' || thatCase === 'paper_scirsus' || thatCase === 'scirsus_stone') {
     return [-1, 1, 0];
+  } else if (thatCase === 'stone_stone' || thatCase === 'paper_paper' || thatCase === 'scirsus_scirsus') {
+    return [0, 0, 0];
   } else {
     return [1, -1, 0];
   }
